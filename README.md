@@ -17,8 +17,8 @@ Proyek ini berisi implementasi algoritma kriptografi **ElGamal** dalam Python de
 
 ## Struktur Proyek
 
-- `elgamal.py` → implementasi ElGamal + antarmuka GUI (Tkinter)
-- `elgamal-cipher.py` → implementasi ElGamal + demo CLI di terminal
+- `elgamal-cipher.py` → implementasi ElGamal + antarmuka GUI (Tkinter)
+- `elgamal.py` → implementasi ElGamal + demo CLI di terminal
 
 ## Prasyarat
 
