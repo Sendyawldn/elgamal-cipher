@@ -55,7 +55,7 @@ pip install sympy
 ### 1) Versi CLI
 
 ```bash
-python elgamal-cipher.py
+python elgamal.py
 ```
 
 Program akan:
@@ -68,7 +68,7 @@ Program akan:
 ### 2) Versi GUI (Tkinter)
 
 ```bash
-python elgamal.py
+python elgamal-cipher.py
 ```
 
 Langkah penggunaan GUI:
