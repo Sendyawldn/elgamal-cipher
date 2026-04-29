@@ -1,9 +1,8 @@
-# ElGamal Cipher (Python)
+# ElGamal Cipher (React)
 
-Proyek ini berisi implementasi algoritma kriptografi **ElGamal** dalam Python dengan dua versi:
+Proyek ini berisi implementasi algoritma kriptografi **ElGamal** dengan antarmuka **React**.
 
-- Versi terminal/CLI untuk demonstrasi langkah enkripsi-dekripsi.
-- Versi GUI menggunakan Tkinter agar lebih mudah dicoba secara interaktif.
+File Python lama tetap tersedia sebagai referensi implementasi, tetapi tampilan utama sekarang berjalan di browser menggunakan React.
 
 ## Fitur
 
@@ -12,66 +11,40 @@ Proyek ini berisi implementasi algoritma kriptografi **ElGamal** dalam Python de
   - Kunci privat `x`
 - Enkripsi pesan teks menjadi list ciphertext `(c1, c2)`.
 - Dekripsi ciphertext kembali ke plaintext.
-- Demo alur lengkap pada versi CLI.
-- Antarmuka sederhana berbasis Tkinter pada versi GUI.
+- Enkripsi pesan teks menjadi ciphertext langsung di browser.
+- Dekripsi ciphertext kembali ke plaintext.
+- Tampilan interaktif berbasis React.
 
 ## Struktur Proyek
 
-- `elgamal-cipher.py` → implementasi ElGamal + antarmuka GUI (Tkinter)
-- `elgamal.py` → implementasi ElGamal + demo CLI di terminal
+- `src/App.jsx` → aplikasi React + logika ElGamal
+- `src/styles.css` → styling tampilan React
+- `elgamal.py` → implementasi Python CLI lama
+- `elgamal-cipher.py` → implementasi Python Tkinter lama
 
 ## Prasyarat
 
-- Python 3.10+ (disarankan Python 3.12)
-- Paket Python:
-  - `sympy`
+- Node.js 18+
+- npm
 
-> Catatan: Pada Debian/Ubuntu terbaru, instalasi pip global bisa gagal karena kebijakan PEP 668 (externally-managed-environment). Solusi terbaik adalah menggunakan virtual environment.
-
-## Instalasi (Disarankan: Virtual Environment)
+## Instalasi
 
 1. Masuk ke folder proyek.
-2. Buat virtual environment:
+2. Install dependency:
 
 ```bash
-python3 -m venv .venv
+npm install
 ```
 
-3. Aktifkan virtual environment:
+## Menjalankan Aplikasi React
 
 ```bash
-source .venv/bin/activate
+npm run dev
 ```
 
-4. Install dependency:
+Lalu buka URL yang ditampilkan oleh Vite di browser.
 
-```bash
-pip install --upgrade pip
-pip install sympy
-```
-
-## Menjalankan Program
-
-### 1) Versi CLI
-
-```bash
-python elgamal.py
-```
-
-Program akan:
-
-- Membuat kunci publik dan privat
-- Mengenkripsi pesan contoh
-- Mendekripsi kembali
-- Menampilkan hasil verifikasi
-
-### 2) Versi GUI (Tkinter)
-
-```bash
-python elgamal-cipher.py
-```
-
-Langkah penggunaan GUI:
+Langkah penggunaan:
 
 1. Klik **Generate Kunci Baru**
 2. Masukkan pesan pada kolom input
