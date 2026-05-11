@@ -1,625 +1,557 @@
-// import React, { useMemo, useState } from 'react';
-
-// const DEFAULT_BITS = 16;
-
-// function randomInt(min, max) {
-//   return Math.floor(Math.random() * (max - min + 1)) + min;
-// }
-
-// function modPow(base, exponent, modulus) {
-//   let result = 1n;
-//   let currentBase = BigInt(base) % BigInt(modulus);
-//   let currentExponent = BigInt(exponent);
-//   const currentModulus = BigInt(modulus);
-
-//   while (currentExponent > 0n) {
-//     if (currentExponent % 2n === 1n) {
-//       result = (result * currentBase) % currentModulus;
-//     }
-
-//     currentBase = (currentBase * currentBase) % currentModulus;
-//     currentExponent /= 2n;
-//   }
-
-//   return Number(result);
-// }
-
-// function extendedGcd(a, b) {
-//   if (b === 0n) {
-//     return [a, 1n, 0n];
-//   }
-
-//   const [gcd, x1, y1] = extendedGcd(b, a % b);
-//   return [gcd, y1, x1 - (a / b) * y1];
-// }
-
-// function modInverse(value, modulus) {
-//   const [gcd, x] = extendedGcd(BigInt(value), BigInt(modulus));
-
-//   if (gcd !== 1n) {
-//     throw new Error('Invers modular tidak tersedia.');
-//   }
-
-//   return Number((x % BigInt(modulus) + BigInt(modulus)) % BigInt(modulus));
-// }
-
-// function isPrime(number) {
-//   if (number < 2) return false;
-//   if (number === 2) return true;
-//   if (number % 2 === 0) return false;
-
-//   for (let divisor = 3; divisor * divisor <= number; divisor += 2) {
-//     if (number % divisor === 0) return false;
-//   }
-
-//   return true;
-// }
-
-// function nextPrime(candidate) {
-//   let number = Math.max(2, candidate);
-
-//   while (!isPrime(number)) {
-//     number += 1;
-//   }
-
-//   return number;
-// }
-
-// function generatePrime(bits = DEFAULT_BITS) {
-//   const start = 2 ** (bits - 1);
-//   return nextPrime(randomInt(start, start * 2));
-// }
-
-// function generateKeys(bits = DEFAULT_BITS) {
-//   const p = generatePrime(bits);
-//   const g = randomInt(2, p - 2);
-//   const x = randomInt(2, p - 2);
-//   const y = modPow(g, x, p);
-
-//   return {
-//     publicKey: { p, g, y },
-//     privateKey: x,
-//   };
-// }
-
-// function encrypt(publicKey, messageNumber) {
-//   const { p, g, y } = publicKey;
-//   const k = randomInt(2, p - 2);
-//   const c1 = modPow(g, k, p);
-//   const c2 = (messageNumber * modPow(y, k, p)) % p;
-
-//   return { c1, c2 };
-// }
-
-// function decrypt(publicKey, privateKey, cipher) {
-//   const { p } = publicKey;
-//   const s = modPow(cipher.c1, privateKey, p);
-//   const sInv = modInverse(s, p);
-
-//   return (cipher.c2 * sInv) % p;
-// }
-
-// function textToNumbers(text) {
-//   return Array.from(text).map((character) => character.charCodeAt(0));
-// }
-
-// function numbersToText(numbers) {
-//   return numbers.map((number) => String.fromCharCode(number)).join('');
-// }
-
-// function encryptText(publicKey, plaintext) {
-//   return textToNumbers(plaintext).map((number) => encrypt(publicKey, number));
-// }
-
-// function decryptText(publicKey, privateKey, cipherList) {
-//   return numbersToText(cipherList.map((cipher) => decrypt(publicKey, privateKey, cipher)));
-// }
-
-// function formatPublicKey(publicKey) {
-//   if (!publicKey) return '-';
-//   return `(${publicKey.p}, ${publicKey.g}, ${publicKey.y})`;
-// }
-
-// function formatCipher(cipherList) {
-//   if (!cipherList.length) return '-';
-//   return cipherList.map(({ c1, c2 }) => `(${c1}, ${c2})`).join(', ');
-// }
-
-// export default function App() {
-//   const [publicKey, setPublicKey] = useState(null);
-//   const [privateKey, setPrivateKey] = useState(null);
-//   const [message, setMessage] = useState('');
-//   const [cipherList, setCipherList] = useState([]);
-//   const [plainResult, setPlainResult] = useState('');
-//   const [notice, setNotice] = useState('Generate kunci terlebih dahulu untuk memulai.');
-
-//   const canEncrypt = publicKey && message.trim().length > 0;
-//   const canDecrypt = publicKey && privateKey && cipherList.length > 0;
-
-//   const asciiPreview = useMemo(() => {
-//     if (!message.trim()) return '-';
-//     return textToNumbers(message).join(', ');
-//   }, [message]);
-
-//   function handleGenerateKey() {
-//     const keys = generateKeys();
-//     setPublicKey(keys.publicKey);
-//     setPrivateKey(keys.privateKey);
-//     setCipherList([]);
-//     setPlainResult('');
-//     setNotice('Pasangan kunci berhasil dibuat.');
-//   }
-
-//   function handleEncrypt() {
-//     if (!publicKey) {
-//       setNotice('Harap generate kunci terlebih dahulu.');
-//       return;
-//     }
-
-//     if (!message.trim()) {
-//       setNotice('Pesan tidak boleh kosong.');
-//       return;
-//     }
-
-//     const nextCipherList = encryptText(publicKey, message.trim());
-//     setCipherList(nextCipherList);
-//     setPlainResult('');
-//     setNotice('Pesan berhasil dienkripsi.');
-//   }
-
-//   function handleDecrypt() {
-//     if (!canDecrypt) {
-//       setNotice('Belum ada pesan yang dienkripsi.');
-//       return;
-//     }
-
-//     setPlainResult(decryptText(publicKey, privateKey, cipherList));
-//     setNotice('Ciphertext berhasil didekripsi.');
-//   }
-
-//   return (
-//     <main className="app-shell">
-//       <section className="workspace" aria-label="Aplikasi kriptografi ElGamal">
-//         <header className="app-header">
-//           <div>
-//             <p className="eyebrow">Kriptografi klasik</p>
-//             <h1>ElGamal Cipher</h1>
-//           </div>
-//           <button className="primary-button" type="button" onClick={handleGenerateKey}>
-//             Generate Kunci
-//           </button>
-//         </header>
-
-//         <div className="notice" role="status">
-//           {notice}
-//         </div>
-
-//         <section className="panel key-panel">
-//           <div>
-//             <h2>Manajemen Kunci</h2>
-//             <p>Gunakan pasangan kunci publik dan privat untuk enkripsi dan dekripsi.</p>
-//           </div>
-
-//           <div className="key-grid">
-//             <div className="key-item">
-//               <span>Kunci Publik (p, g, y)</span>
-//               <strong>{formatPublicKey(publicKey)}</strong>
-//             </div>
-//             <div className="key-item">
-//               <span>Kunci Privat (x)</span>
-//               <strong>{privateKey ?? '-'}</strong>
-//             </div>
-//           </div>
-//         </section>
-
-//         <section className="content-grid">
-//           <div className="panel">
-//             <div className="panel-title">
-//               <h2>Enkripsi Pesan</h2>
-//               <button type="button" onClick={handleEncrypt} disabled={!canEncrypt}>
-//                 Enkripsi
-//               </button>
-//             </div>
-
-//             <label htmlFor="message">Pesan Asli</label>
-//             <textarea
-//               id="message"
-//               value={message}
-//               onChange={(event) => setMessage(event.target.value)}
-//               placeholder="Masukkan pesan..."
-//               rows={6}
-//             />
-
-//             <div className="output-box">
-//               <span>ASCII</span>
-//               <p>{asciiPreview}</p>
-//             </div>
-
-//             <div className="output-box">
-//               <span>Hasil Ciphertext</span>
-//               <p>{formatCipher(cipherList)}</p>
-//             </div>
-//           </div>
-
-//           <div className="panel">
-//             <div className="panel-title">
-//               <h2>Dekripsi Pesan</h2>
-//               <button type="button" onClick={handleDecrypt} disabled={!canDecrypt}>
-//                 Dekripsi
-//               </button>
-//             </div>
-
-//             <div className="result-area">
-//               <span>Pesan Kembali</span>
-//               <strong>{plainResult || '-'}</strong>
-//             </div>
-
-//             <div className="formula-list" aria-label="Rumus ElGamal">
-//               <div>
-//                 <span>Public key</span>
-//                 <code>y = g^x mod p</code>
-//               </div>
-//               <div>
-//                 <span>Encrypt</span>
-//                 <code>c1 = g^k mod p</code>
-//                 <code>c2 = m . y^k mod p</code>
-//               </div>
-//               <div>
-//                 <span>Decrypt</span>
-//                 <code>m = c2 . (c1^x)^-1 mod p</code>
-//               </div>
-//             </div>
-//           </div>
-//         </section>
-//       </section>
-//     </main>
-//   );
-// }
-
 import React, { useState } from "react";
 
-// ==========================================
-// 1. FUNGSI MATEMATIKA KRIPTOGRAFI ELGAMAL
-// ==========================================
+const FORMULA_CARDS = [
+  {
+    title: "Bangkitkan kunci publik",
+    formula: "y = g^x mod p",
+    description:
+      "Bob menghitung y dari parameter publik g dan kunci rahasia x.",
+  },
+  {
+    title: "Enkripsi langkah 1",
+    formula: "c1 = g^k mod p",
+    description: "Alice memilih k acak untuk setiap huruf yang dikirim.",
+  },
+  {
+    title: "Enkripsi langkah 2",
+    formula: "c2 = (m × y^k) mod p",
+    description: "m adalah ASCII huruf, lalu dikalikan dengan shared secret.",
+  },
+  {
+    title: "Dekripsi",
+    formula: "m = (c2 × (c1^x)^-1) mod p",
+    description: "Bob membalik shared secret dengan kunci privat x.",
+  },
+];
 
-// Cek bilangan prima
-const isPrime = (num) => {
-  for (let i = 2, s = Math.sqrt(num); i <= s; i++) {
-    if (num % i === 0) return false;
+const VARIABLE_CARDS = [
+  {
+    name: "p",
+    value: "Bilangan prima modulus",
+    note: "Semua operasi dihitung modulo p.",
+  },
+  {
+    name: "g",
+    value: "Parameter dasar",
+    note: "Dipakai untuk membentuk kunci publik dan c1.",
+  },
+  {
+    name: "x",
+    value: "Kunci privat Bob",
+    note: "Hanya Bob yang boleh tahu nilainya.",
+  },
+  {
+    name: "y",
+    value: "Kunci publik Bob",
+    note: "Dikirim ke Alice untuk proses enkripsi.",
+  },
+  {
+    name: "k",
+    value: "Nonce acak per pesan",
+    note: "Berubah setiap huruf agar ciphertext berbeda.",
+  },
+  {
+    name: "m",
+    value: "Nilai ASCII pesan",
+    note: "Karakter diubah dulu ke angka.",
+  },
+];
+
+function isPrime(num) {
+  for (
+    let divisor = 2, limit = Math.sqrt(num);
+    divisor <= limit;
+    divisor += 1
+  ) {
+    if (num % divisor === 0) return false;
   }
-  return num > 1;
-};
 
-// Generate bilangan prima acak (12-bit agar cukup untuk ASCII)
-const generatePrime = (bits = 12) => {
+  return num > 1;
+}
+
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generatePrime(bits = 12) {
   const min = 2 ** (bits - 1);
   const max = 2 ** bits - 1;
+
   while (true) {
-    const p = Math.floor(Math.random() * (max - min + 1)) + min;
-    if (isPrime(p)) return p;
+    const candidate = randomInt(min, max);
+    if (isPrime(candidate)) return candidate;
   }
-};
+}
 
-// Perpangkatan Modulo (base^exp mod m) menggunakan BigInt agar tidak overflow
-const modPow = (b, e, m) => {
-  let res = 1n;
-  let base = BigInt(b) % BigInt(m);
-  let exp = BigInt(e);
-  const mod = BigInt(m);
-  while (exp > 0n) {
-    if (exp % 2n === 1n) res = (res * base) % mod;
-    exp /= 2n;
-    base = (base * base) % mod;
+function modPow(base, exponent, modulus) {
+  let result = 1n;
+  let currentBase = BigInt(base) % BigInt(modulus);
+  let currentExponent = BigInt(exponent);
+  const currentModulus = BigInt(modulus);
+
+  while (currentExponent > 0n) {
+    if (currentExponent % 2n === 1n) {
+      result = (result * currentBase) % currentModulus;
+    }
+
+    currentBase = (currentBase * currentBase) % currentModulus;
+    currentExponent /= 2n;
   }
-  return Number(res);
-};
 
-// Mencari Invers Modulo
-const modInverse = (a, m) => {
-  let m0 = BigInt(m),
-    y = 0n,
-    x = 1n;
-  let a0 = BigInt(a);
-  if (m0 === 1n) return 0n;
-  while (a0 > 1n) {
-    let q = a0 / m0;
-    let t = m0;
-    m0 = a0 % m0;
-    a0 = t;
-    t = y;
-    y = x - q * y;
-    x = t;
+  return Number(result);
+}
+
+function modInverse(value, modulus) {
+  let remainder = BigInt(modulus);
+  let nextRemainder = BigInt(value);
+  let coefficient = 0n;
+  let nextCoefficient = 1n;
+
+  while (nextRemainder !== 0n) {
+    const quotient = remainder / nextRemainder;
+    [remainder, nextRemainder] = [
+      nextRemainder,
+      remainder - quotient * nextRemainder,
+    ];
+    [coefficient, nextCoefficient] = [
+      nextCoefficient,
+      coefficient - quotient * nextCoefficient,
+    ];
   }
-  if (x < 0n) x += BigInt(m);
-  return Number(x);
-};
 
-// ==========================================
-// 2. KOMPONEN UTAMA (UI ALICE & BOB)
-// ==========================================
+  if (remainder !== 1n) {
+    throw new Error("Invers modular tidak tersedia.");
+  }
+
+  if (coefficient < 0n) {
+    coefficient += BigInt(modulus);
+  }
+
+  return Number(coefficient);
+}
+
+function formatCharacter(character) {
+  return JSON.stringify(character);
+}
+
+function textToNumbers(text) {
+  return Array.from(text).map((character) => character.charCodeAt(0));
+}
+
+function formatPublicKey(publicKey) {
+  if (!publicKey) return "-";
+
+  return `(${publicKey.p}, ${publicKey.g}, ${publicKey.y})`;
+}
+
+function formatCipher(cipherList) {
+  if (!cipherList.length) return "-";
+
+  return cipherList.map(({ c1, c2 }) => `(${c1}, ${c2})`).join(", ");
+}
+
+function buildEncryptionTrace(publicKey, plaintext) {
+  const { p, g, y } = publicKey;
+  const cipherList = [];
+  const trace = [];
+
+  Array.from(plaintext).forEach((character) => {
+    const ascii = character.charCodeAt(0);
+    const k = randomInt(2, p - 2);
+    const c1 = modPow(g, k, p);
+    const sharedSecret = modPow(y, k, p);
+    const c2 = Number((BigInt(ascii) * BigInt(sharedSecret)) % BigInt(p));
+
+    cipherList.push({ c1, c2 });
+    trace.push({ character, ascii, k, c1, sharedSecret, c2 });
+  });
+
+  return { cipherList, trace };
+}
+
+function buildDecryptionTrace(publicKey, privateKey, cipherList) {
+  const { p } = publicKey;
+  const trace = [];
+  const numbers = cipherList.map(({ c1, c2 }) => {
+    const sharedSecret = modPow(c1, privateKey, p);
+    const sharedInverse = modInverse(sharedSecret, p);
+    const ascii = Number((BigInt(c2) * BigInt(sharedInverse)) % BigInt(p));
+    const character = String.fromCharCode(ascii);
+
+    trace.push({ c1, c2, sharedSecret, sharedInverse, ascii, character });
+    return ascii;
+  });
+
+  return {
+    text: numbers.map((number) => String.fromCharCode(number)).join(""),
+    trace,
+  };
+}
+
+function FormulaCard({ title, formula, description }) {
+  return (
+    <article className="formula-card">
+      <span className="formula-card__label">Rumus</span>
+      <h3>{title}</h3>
+      <code>{formula}</code>
+      <p>{description}</p>
+    </article>
+  );
+}
+
+function VariableCard({ name, value, note }) {
+  return (
+    <article className="variable-card">
+      <strong>{name}</strong>
+      <span>{value}</span>
+      <p>{note}</p>
+    </article>
+  );
+}
+
+function TraceSection({ title, subtitle, items, mode }) {
+  if (!items.length) return null;
+
+  return (
+    <section className="trace-panel" aria-label={title}>
+      <div className="trace-panel__header">
+        <div>
+          <h4>{title}</h4>
+          <p>{subtitle}</p>
+        </div>
+        <span className="trace-count">{items.length} langkah</span>
+      </div>
+
+      <div className="trace-grid">
+        {items.map((item, index) => (
+          <article className="trace-card" key={`${mode}-${index}`}>
+            <div className="trace-card__header">
+              <strong>
+                {mode === "encrypt"
+                  ? formatCharacter(item.character)
+                  : `Cipher ${index + 1}`}
+              </strong>
+              <span>
+                {mode === "encrypt"
+                  ? `m = ${item.ascii}`
+                  : `(${item.c1}, ${item.c2})`}
+              </span>
+            </div>
+
+            <div className="trace-card__body">
+              {mode === "encrypt" ? (
+                <>
+                  <code>k = {item.k}</code>
+                  <code>c1 = g^k mod p = {item.c1}</code>
+                  <code>s = y^k mod p = {item.sharedSecret}</code>
+                  <code>c2 = (m × s) mod p = {item.c2}</code>
+                </>
+              ) : (
+                <>
+                  <code>s = c1^x mod p = {item.sharedSecret}</code>
+                  <code>s^-1 mod p = {item.sharedInverse}</code>
+                  <code>m = (c2 × s^-1) mod p = {item.ascii}</code>
+                  <code>karakter = {formatCharacter(item.character)}</code>
+                </>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export default function App() {
-  // STATE BOB (Penerima)
   const [bobKeys, setBobKeys] = useState(null);
   const [bobReceivedCipher, setBobReceivedCipher] = useState(null);
   const [bobDecrypted, setBobDecrypted] = useState("");
+  const [bobTrace, setBobTrace] = useState([]);
 
-  // STATE ALICE (Pengirim)
   const [alicePubKey, setAlicePubKey] = useState(null);
   const [aliceMsg, setAliceMsg] = useState("");
   const [aliceCipher, setAliceCipher] = useState(null);
+  const [aliceTrace, setAliceTrace] = useState([]);
 
-  // --- AKSI BOB ---
-  const handleGenerateKeys = () => {
+  const [notice, setNotice] = useState(
+    "Generate kunci terlebih dahulu untuk memulai.",
+  );
+
+  const canEncrypt = alicePubKey && aliceMsg.trim().length > 0;
+  const canDecrypt = Boolean(bobReceivedCipher && bobKeys);
+
+  function handleGenerateKeys() {
     const p = generatePrime(12);
-    const g = Math.floor(Math.random() * (p - 3)) + 2;
-    const x = Math.floor(Math.random() * (p - 3)) + 2; // Kunci Privat
-    const y = modPow(g, x, p); // Kunci Publik
+    const g = randomInt(2, p - 2);
+    const x = randomInt(2, p - 2);
+    const y = modPow(g, x, p);
 
     setBobKeys({ p, g, x, y });
     setAlicePubKey(null);
     setAliceCipher(null);
+    setAliceTrace([]);
     setBobReceivedCipher(null);
+    setBobTrace([]);
     setBobDecrypted("");
     setAliceMsg("");
-  };
+    setNotice("Pasangan kunci berhasil dibuat. Bagikan kunci publik ke Alice.");
+  }
 
-  const handleSendPublicKey = () => {
-    if (bobKeys) setAlicePubKey({ p: bobKeys.p, g: bobKeys.g, y: bobKeys.y });
-  };
+  function handleSendPublicKey() {
+    if (!bobKeys) return;
 
-  const handleDecrypt = () => {
-    if (!bobReceivedCipher || !bobKeys) return;
-    const { p, x } = bobKeys;
-    let text = "";
+    setAlicePubKey({ p: bobKeys.p, g: bobKeys.g, y: bobKeys.y });
+    setNotice("Kunci publik Bob sudah diterima Alice.");
+  }
 
-    bobReceivedCipher.forEach(({ c1, c2 }) => {
-      // Rumus Dekripsi: m = c2 * (c1^x)^-1 mod p
-      const s = modPow(c1, x, p);
-      const sInv = modInverse(s, p);
-      const m = Number((BigInt(c2) * BigInt(sInv)) % BigInt(p));
-      text += String.fromCharCode(m); // Kembalikan angka ke huruf ASCII
-    });
-    setBobDecrypted(text);
-  };
-
-  // --- AKSI ALICE ---
-  const handleEncrypt = () => {
-    if (!alicePubKey || !aliceMsg) return;
-    const { p, g, y } = alicePubKey;
-    const cipherArray = [];
-
-    for (let i = 0; i < aliceMsg.length; i++) {
-      const m = aliceMsg.charCodeAt(i);
-      const k = Math.floor(Math.random() * (p - 3)) + 2; // Bilangan acak k
-      // Rumus Enkripsi
-      const c1 = modPow(g, k, p);
-      const c2 = Number((BigInt(m) * BigInt(modPow(y, k, p))) % BigInt(p));
-      cipherArray.push({ c1, c2 });
+  function handleEncrypt() {
+    if (!alicePubKey) {
+      setNotice("Harap generate kunci terlebih dahulu.");
+      return;
     }
-    setAliceCipher(cipherArray);
-  };
 
-  const handleSendCipher = () => {
-    if (aliceCipher) setBobReceivedCipher(aliceCipher);
-  };
+    const plaintext = aliceMsg.trim();
+    if (!plaintext) {
+      setNotice("Pesan tidak boleh kosong.");
+      return;
+    }
+
+    const { cipherList, trace } = buildEncryptionTrace(alicePubKey, plaintext);
+    setAliceCipher(cipherList);
+    setAliceTrace(trace);
+    setBobReceivedCipher(null);
+    setBobTrace([]);
+    setBobDecrypted("");
+    setNotice(
+      "Pesan berhasil dienkripsi. Kirim ciphertext ke Bob untuk dekripsi.",
+    );
+  }
+
+  function handleSendCipher() {
+    if (!aliceCipher) return;
+
+    setBobReceivedCipher(aliceCipher);
+    setBobTrace([]);
+    setBobDecrypted("");
+    setNotice("Ciphertext sudah dikirim ke Bob.");
+  }
+
+  function handleDecrypt() {
+    if (!bobReceivedCipher || !bobKeys) {
+      setNotice("Belum ada pesan yang dienkripsi.");
+      return;
+    }
+
+    const { text, trace } = buildDecryptionTrace(
+      bobKeys,
+      bobKeys.x,
+      bobReceivedCipher,
+    );
+    setBobDecrypted(text);
+    setBobTrace(trace);
+    setNotice("Ciphertext berhasil didekripsi.");
+  }
 
   return (
-    <div style={styles.container}>
-      {/* ================================================= */}
-      {/* PANEL KIRI: PENERIMA (BOB) */}
-      {/* ================================================= */}
-      <div style={{ ...styles.column, borderTop: "5px solid #007bff" }}>
-        <h2 style={styles.header}>👤 Layar Penerima (Bob)</h2>
-
-        <div style={styles.card}>
-          <h3>1. Buat Kunci</h3>
-          <p style={styles.helpText}>
-            Bob membangkitkan kunci asimetris secara lokal.
+    <main className="chat-page">
+      <section className="intro-panel">
+        <div className="intro-panel__copy">
+          <p className="eyebrow">Kriptografi klasik</p>
+          <h1>ElGamal Cipher</h1>
+          <p className="intro-copy">
+            Setiap tombol di web ini sekarang menampilkan rumus dan nilai
+            antara, jadi proses enkripsi dan dekripsi bisa diikuti langkah demi
+            langkah.
           </p>
-          <button style={styles.btnPrimary} onClick={handleGenerateKeys}>
-            Generate Kunci Baru
-          </button>
-
-          {bobKeys && (
-            <div style={{ marginTop: "15px" }}>
-              <p>
-                <strong>Kunci Privat (Rahasia):</strong>{" "}
-                <span style={styles.secret}>x = {bobKeys.x}</span>
-              </p>
-              <p>
-                <strong>Kunci Publik:</strong> p={bobKeys.p}, g={bobKeys.g}, y=
-                {bobKeys.y}
-              </p>
-              <button style={styles.btnAction} onClick={handleSendPublicKey}>
-                Bagikan Kunci Publik ke Alice ➔
-              </button>
-            </div>
-          )}
         </div>
 
-        <div style={styles.card}>
-          <h3>4. Terima & Dekripsi Pesan</h3>
-          {bobReceivedCipher ? (
-            <>
-              <p>
-                <strong>Pesan Masuk (Ciphertext):</strong>
-              </p>
-              <p style={styles.cipherText}>
-                {bobReceivedCipher.map((c) => `(${c.c1}, ${c.c2})`).join(", ")}
-              </p>
-              <button style={styles.btnSuccess} onClick={handleDecrypt}>
-                Bongkar Sandi (Dekripsi)
-              </button>
-              {bobDecrypted && (
-                <div style={styles.resultBox}>
-                  <strong>Hasil Dekripsi: </strong> {bobDecrypted}
-                </div>
-              )}
-            </>
-          ) : (
-            <p style={styles.helpText}>Menunggu pesan masuk dari Alice...</p>
-          )}
+        <div className="intro-panel__meta">
+          <div>
+            <span>Alur belajar</span>
+            <strong>Bob bikin kunci, Alice enkripsi, Bob dekripsi</strong>
+          </div>
+          <div>
+            <span>Yang ditampilkan</span>
+            <strong>p, g, x, y, k, c1, c2, dan hasil ASCII</strong>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* ================================================= */}
-      {/* PANEL KANAN: PENGIRIM (ALICE) */}
-      {/* ================================================= */}
-      <div style={{ ...styles.column, borderTop: "5px solid #28a745" }}>
-        <h2 style={styles.header}>👱‍♀️ Layar Pengirim (Alice)</h2>
+      <section className="notice" role="status">
+        {notice}
+      </section>
 
-        <div style={styles.card}>
-          <h3>2. Tulis Pesan</h3>
-          {alicePubKey ? (
-            <>
-              <p style={styles.helpText}>
-                Kunci Publik Bob diterima: (p={alicePubKey.p}, g={alicePubKey.g}
-                , y={alicePubKey.y})
-              </p>
-              <textarea
-                style={styles.input}
-                rows="3"
-                placeholder="Ketik rahasia di sini..."
-                value={aliceMsg}
-                onChange={(e) => setAliceMsg(e.target.value)}
-              />
-              <button style={styles.btnPrimary} onClick={handleEncrypt}>
-                Enkripsi Pesan
-              </button>
-            </>
-          ) : (
-            <p style={styles.helpText}>
-              Menunggu Bob membagikan kunci publiknya...
+      <section className="formula-grid" aria-label="Rumus utama ElGamal">
+        {FORMULA_CARDS.map((card) => (
+          <FormulaCard
+            key={card.title}
+            title={card.title}
+            formula={card.formula}
+            description={card.description}
+          />
+        ))}
+      </section>
+
+      <section className="variable-panel">
+        <div className="panel-heading">
+          <h2>Arti simbol</h2>
+          <p>
+            Bagian ini membantu membaca langkah hitung yang muncul di bawahnya.
+          </p>
+        </div>
+
+        <div className="variable-grid">
+          {VARIABLE_CARDS.map((variable) => (
+            <VariableCard
+              key={variable.name}
+              name={variable.name}
+              value={variable.value}
+              note={variable.note}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="chat-demo-shell">
+        <section className="chat-column chat-column--bob">
+          <h2 className="chat-header">👤 Layar Penerima (Bob)</h2>
+
+          <div className="chat-card">
+            <h3>1. Buat Kunci</h3>
+            <p className="chat-help-text">
+              Bob membangkitkan parameter p, g, x, lalu menghitung y = g^x mod
+              p.
             </p>
-          )}
-        </div>
+            <button
+              className="chat-button chat-button--primary"
+              type="button"
+              onClick={handleGenerateKeys}
+            >
+              Generate Kunci Baru
+            </button>
 
-        <div style={styles.card}>
-          <h3>3. Hasil Enkripsi</h3>
-          {aliceCipher ? (
-            <>
-              <p style={styles.cipherText}>
-                {aliceCipher.map((c) => `(${c.c1}, ${c.c2})`).join(", ")}
+            {bobKeys && (
+              <div className="key-detail">
+                <p>
+                  <strong>Kunci Privat (Rahasia):</strong>{" "}
+                  <span className="secret-badge">x = {bobKeys.x}</span>
+                </p>
+                <p>
+                  <strong>Kunci Publik:</strong> p={bobKeys.p}, g={bobKeys.g},
+                  y={bobKeys.y}
+                </p>
+                <button
+                  className="chat-button chat-button--action"
+                  type="button"
+                  onClick={handleSendPublicKey}
+                >
+                  Bagikan Kunci Publik ke Alice ➔
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="chat-card">
+            <h3>4. Terima & Dekripsi Pesan</h3>
+            {bobReceivedCipher ? (
+              <>
+                <p>
+                  <strong>Pesan Masuk (Ciphertext):</strong>
+                </p>
+                <p className="cipher-text">{formatCipher(bobReceivedCipher)}</p>
+                <button
+                  className="chat-button chat-button--success"
+                  type="button"
+                  onClick={handleDecrypt}
+                >
+                  Bongkar Sandi (Dekripsi)
+                </button>
+                {bobDecrypted && (
+                  <div className="result-box">
+                    <strong>Hasil Dekripsi:</strong> {bobDecrypted}
+                  </div>
+                )}
+                <TraceSection
+                  title="Langkah dekripsi"
+                  subtitle="Bob menghitung shared secret dari c1 lalu mengalikannya dengan invers modulo."
+                  items={bobTrace}
+                  mode="decrypt"
+                />
+              </>
+            ) : (
+              <p className="chat-help-text">
+                Menunggu pesan masuk dari Alice...
               </p>
-              <button style={styles.btnAction} onClick={handleSendCipher}>
-                Kirim Pesan Sandi ke Bob ➔
-              </button>
-            </>
-          ) : (
-            <p style={styles.helpText}>Belum ada pesan yang dienkripsi.</p>
-          )}
-        </div>
-      </div>
-    </div>
+            )}
+          </div>
+        </section>
+
+        <section className="chat-column chat-column--alice">
+          <h2 className="chat-header">👱‍♀️ Layar Pengirim (Alice)</h2>
+
+          <div className="chat-card">
+            <h3>2. Tulis Pesan</h3>
+            {alicePubKey ? (
+              <>
+                <p className="chat-help-text">
+                  Kunci publik Bob diterima: (p={alicePubKey.p}, g=
+                  {alicePubKey.g}, y={alicePubKey.y})
+                </p>
+                <textarea
+                  className="message-input"
+                  rows="3"
+                  placeholder="Ketik rahasia di sini..."
+                  value={aliceMsg}
+                  onChange={(event) => setAliceMsg(event.target.value)}
+                />
+                <div className="output-strip">
+                  <span>ASCII pesan</span>
+                  <p>
+                    {aliceMsg.trim()
+                      ? textToNumbers(aliceMsg.trim()).join(", ")
+                      : "-"}
+                  </p>
+                </div>
+                <button
+                  className="chat-button chat-button--primary"
+                  type="button"
+                  onClick={handleEncrypt}
+                >
+                  Enkripsi Pesan
+                </button>
+              </>
+            ) : (
+              <p className="chat-help-text">
+                Menunggu Bob membagikan kunci publiknya...
+              </p>
+            )}
+          </div>
+
+          <div className="chat-card">
+            <h3>3. Hasil Enkripsi</h3>
+            {aliceCipher ? (
+              <>
+                <p className="cipher-text">{formatCipher(aliceCipher)}</p>
+                <button
+                  className="chat-button chat-button--action"
+                  type="button"
+                  onClick={handleSendCipher}
+                >
+                  Kirim Pesan Sandi ke Bob ➔
+                </button>
+                <TraceSection
+                  title="Langkah enkripsi"
+                  subtitle="Untuk setiap huruf, Alice memilih k acak lalu menghitung c1 dan c2."
+                  items={aliceTrace}
+                  mode="encrypt"
+                />
+              </>
+            ) : (
+              <p className="chat-help-text">Belum ada pesan yang dienkripsi.</p>
+            )}
+          </div>
+        </section>
+      </section>
+    </main>
   );
 }
-
-// ==========================================
-// 3. STYLING (CSS in JS)
-// ==========================================
-const styles = {
-  container: {
-    display: "flex",
-    flexDirection: "row",
-    gap: "20px",
-    padding: "30px",
-    fontFamily: "system-ui, -apple-system, sans-serif",
-    backgroundColor: "#e9ecef",
-    minHeight: "100vh",
-    color: "#333",
-  },
-  column: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    borderRadius: "10px",
-    padding: "25px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-  },
-  header: {
-    margin: "0 0 10px 0",
-    paddingBottom: "15px",
-    borderBottom: "1px solid #ddd",
-    fontSize: "1.4rem",
-  },
-  card: {
-    backgroundColor: "#f8f9fa",
-    padding: "20px",
-    borderRadius: "8px",
-    border: "1px solid #dee2e6",
-  },
-  helpText: {
-    fontSize: "0.9rem",
-    color: "#6c757d",
-    fontStyle: "italic",
-    marginBottom: "15px",
-  },
-  btnPrimary: {
-    padding: "10px 16px",
-    backgroundColor: "#0d6efd",
-    color: "white",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    fontWeight: "600",
-    width: "100%",
-  },
-  btnAction: {
-    padding: "10px 16px",
-    backgroundColor: "#ffc107",
-    color: "#000",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    fontWeight: "600",
-    marginTop: "10px",
-    width: "100%",
-  },
-  btnSuccess: {
-    padding: "10px 16px",
-    backgroundColor: "#198754",
-    color: "white",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    fontWeight: "600",
-    width: "100%",
-    marginBottom: "15px",
-  },
-  input: {
-    padding: "12px",
-    borderRadius: "5px",
-    border: "1px solid #ced4da",
-    width: "100%",
-    boxSizing: "border-box",
-    marginBottom: "10px",
-    fontSize: "1rem",
-  },
-  secret: {
-    backgroundColor: "#dc3545",
-    color: "white",
-    padding: "2px 6px",
-    borderRadius: "4px",
-  },
-  cipherText: {
-    fontFamily: "monospace",
-    wordBreak: "break-all",
-    color: "#d63384",
-    backgroundColor: "#fff",
-    padding: "10px",
-    border: "1px solid #ddd",
-    borderRadius: "5px",
-    marginBottom: "15px",
-  },
-  resultBox: {
-    backgroundColor: "#d1e7dd",
-    color: "#0f5132",
-    padding: "15px",
-    borderRadius: "5px",
-    border: "1px solid #badbcc",
-    fontSize: "1.1rem",
-  },
-};
